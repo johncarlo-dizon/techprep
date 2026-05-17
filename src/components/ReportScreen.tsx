@@ -10,137 +10,117 @@ interface ReportScreenProps {
 }
 
 export default function ReportScreen({ entries, config, onPracticeAgain, onHome }: ReportScreenProps) {
-  const scored = entries.filter(e => e.feedback !== null);
-  const avg = scored.length
-    ? Math.round(scored.reduce((a, e) => a + e.feedback!.score, 0) / scored.length)
-    : 0;
-
+  const scored = entries.filter(e => e.feedback);
+  const avg = scored.length ? Math.round(scored.reduce((a, e) => a + e.feedback!.score, 0) / scored.length) : 0;
   const grade =
-    avg >= 90 ? 'Outstanding 🏆' :
-    avg >= 75 ? 'Strong Performance ✅' :
-    avg >= 60 ? 'Good Progress 📈' :
-    avg >= 45 ? 'Needs Practice ⚠️' :
-    'Keep Studying 📚';
+    avg >= 90 ? 'Outstanding' : avg >= 75 ? 'Strong' :
+    avg >= 60 ? 'Good' : avg >= 45 ? 'Needs Practice' : 'Keep Studying';
 
-  const tips =
-    avg >= 75 ? 'Great session. Push into harder difficulty next time, and focus on explaining trade-offs — not just what something is, but why you\'d choose it.' :
-    avg >= 55 ? 'Solid base. Work on being more specific. Vague answers lose points in real interviews — name the tool, the method, the pattern.' :
-    'Keep at it. Pick 2-3 topics and study them deeply before your next session. The "Show Answer" button is your best friend right now.';
+  const gradeColor = avg >= 75 ? 'var(--green)' : avg >= 55 ? 'var(--amber)' : 'var(--red)';
 
-  const barColor = (s: number) => s >= 80 ? '#10b981' : s >= 55 ? '#3b82f6' : '#ef4444';
+  const coach =
+    avg >= 75 ? 'Great session. Next time, push into harder difficulty and focus on explaining trade-offs — not just what something is, but why.' :
+    avg >= 55 ? 'Solid base. Work on being more specific. Name the tool, the method, the pattern — vague answers lose points in real interviews.' :
+    'Keep at it. Use the "Show Answer" button to study — pick 2–3 weak topics and drill them before your next session.';
+
+  const barColor = (s: number) => s >= 80 ? 'var(--green)' : s >= 55 ? 'var(--accent)' : 'var(--red)';
 
   return (
-    <div style={{ maxWidth: 700 }}>
-      <div style={{ marginBottom: 32 }}>
-        <h1 style={{ fontFamily: 'DM Serif Display, serif', fontSize: 34, marginBottom: 6 }}>Session Report</h1>
-        <p style={{ color: 'var(--muted)', fontSize: 14 }}>
-          {config.role.name} · {config.difficulty} · {scored.length} of {entries.length} answered
-        </p>
+    <div style={{ maxWidth: 640 }}>
+      <div style={{ marginBottom: 36 }}>
+        <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 8 }}>Session Complete</div>
+        <h1 style={{ fontSize: 28, fontWeight: 700, color: 'var(--text)', marginBottom: 6 }}>Your Results</h1>
+        <p style={{ fontSize: 13, color: 'var(--muted)' }}>{config.role.name} · {config.difficulty} · {scored.length}/{entries.length} answered</p>
       </div>
 
-      {/* Overall score */}
-      <div style={{ textAlign: 'center', padding: '32px 0 24px' }}>
-        <div style={{ fontFamily: 'DM Serif Display, serif', fontSize: 80, lineHeight: 1, color: 'var(--text)' }}>
-          {avg}<span style={{ fontSize: 36, color: 'var(--muted)' }}>%</span>
+      {/* Score hero */}
+      <div style={{
+        background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 14,
+        padding: '28px 32px', marginBottom: 20, display: 'flex', alignItems: 'center', gap: 28,
+      }}>
+        <div style={{ textAlign: 'center', flexShrink: 0 }}>
+          <div style={{ fontSize: 56, fontWeight: 800, color: gradeColor, lineHeight: 1, fontFamily: 'JetBrains Mono, monospace' }}>
+            {avg}<span style={{ fontSize: 24, color: 'var(--muted)' }}>%</span>
+          </div>
+          <div style={{ fontSize: 13, fontWeight: 600, color: gradeColor, marginTop: 6 }}>{grade}</div>
         </div>
-        <div style={{ fontSize: 15, color: 'var(--muted)', marginTop: 8 }}>{grade}</div>
+        <div style={{ flex: 1 }}>
+          <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 8 }}>Coach</div>
+          <p style={{ fontSize: 13, color: 'var(--text2)', lineHeight: 1.7 }}>{coach}</p>
+        </div>
       </div>
 
       {/* Score bars */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 28 }}>
-        {entries.map((e, i) => {
-          const s = e.feedback?.score ?? 0;
-          const skipped = e.answer === '[Skipped]';
-          return (
-            <div key={i} style={{ display: 'grid', gridTemplateColumns: '1fr 180px 40px', alignItems: 'center', gap: 12, fontSize: 12 }}>
-              <span style={{ color: 'var(--muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                {e.question.topic}
-              </span>
-              <div style={{ height: 5, background: 'var(--border)', borderRadius: 3, overflow: 'hidden' }}>
-                {!skipped && (
-                  <div style={{ height: '100%', background: barColor(s), width: `${s}%`, borderRadius: 3, transition: 'width 1s ease' }} />
-                )}
+      <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 12, padding: '18px 20px', marginBottom: 20 }}>
+        <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 14 }}>By Question</div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          {entries.map((e, i) => {
+            const s = e.feedback?.score ?? 0;
+            const skipped = e.answer === '[Skipped]';
+            return (
+              <div key={i} style={{ display: 'grid', gridTemplateColumns: '24px 1fr 100px 36px', alignItems: 'center', gap: 10 }}>
+                <span style={{ fontSize: 11, color: 'var(--muted)', fontFamily: 'JetBrains Mono, monospace' }}>Q{i + 1}</span>
+                <span style={{ fontSize: 12, color: 'var(--text2)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {e.question.topic}
+                </span>
+                <div style={{ height: 4, background: 'var(--border)', borderRadius: 2, overflow: 'hidden' }}>
+                  {!skipped && <div style={{ height: '100%', background: barColor(s), width: `${s}%`, borderRadius: 2, transition: 'width 1s ease' }} />}
+                </div>
+                <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 11, fontWeight: 600, color: skipped ? 'var(--dim)' : barColor(s), textAlign: 'right' }}>
+                  {skipped ? '—' : `${s}`}
+                </span>
               </div>
-              <span style={{ fontFamily: 'DM Mono, monospace', color: skipped ? 'var(--dim)' : barColor(s), textAlign: 'right' }}>
-                {skipped ? 'skip' : s}
-              </span>
-            </div>
-          );
-        })}
-      </div>
-
-      {/* Coach tip */}
-      <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 12, padding: '16px 20px', marginBottom: 28 }}>
-        <div style={{ fontSize: 10, letterSpacing: '.1em', textTransform: 'uppercase', color: 'var(--muted)', marginBottom: 8 }}>
-          💡 Coach
+            );
+          })}
         </div>
-        <p style={{ fontSize: 14, lineHeight: 1.7, color: 'var(--text)' }}>{tips}</p>
       </div>
 
-      {/* Per-question review */}
-      <div style={{ fontSize: 11, letterSpacing: '.1em', textTransform: 'uppercase', color: 'var(--muted)', marginBottom: 14 }}>
-        Question Review
-      </div>
+      {/* Q&A review — always show correct answer */}
+      <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 12 }}>Question Review</div>
       {entries.map((entry, i) => (
-        <div key={i} style={{
-          background: 'var(--card)', border: '1px solid var(--border)',
-          borderRadius: 12, padding: '18px 20px', marginBottom: 12,
-        }}>
+        <div key={i} style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 12, padding: '16px 18px', marginBottom: 10 }}>
           <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, marginBottom: 10 }}>
-            <p style={{ fontSize: 14, color: 'var(--text)', fontWeight: 500, lineHeight: 1.5, flex: 1 }}>
-              {entry.question.question}
-            </p>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: 11, color: 'var(--accent)', fontWeight: 600, marginBottom: 5 }}>
+                Q{i + 1} · {entry.question.type} · {entry.question.topic}
+              </div>
+              <p style={{ fontSize: 14, color: 'var(--text)', fontWeight: 500, lineHeight: 1.5 }}>{entry.question.question}</p>
+            </div>
             {entry.feedback && (
-              <span style={{
-                fontFamily: 'DM Mono, monospace', fontSize: 13, fontWeight: 600, flexShrink: 0,
-                color: barColor(entry.feedback.score),
-              }}>
+              <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 13, fontWeight: 700, color: barColor(entry.feedback.score), flexShrink: 0 }}>
                 {entry.feedback.score}/100
               </span>
-            )}
-            {!entry.feedback && (
-              <span style={{ fontSize: 11, color: 'var(--dim)', flexShrink: 0 }}>skipped</span>
             )}
           </div>
 
           {entry.feedback && (
-            <>
-              <div style={{ height: 1, background: 'var(--border)', margin: '10px 0' }} />
-              <div style={{ fontSize: 12, color: 'var(--muted)', lineHeight: 1.6 }}>
-                <span style={{ color: 'var(--green)' }}>✅ </span>{entry.feedback.strength}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6, marginBottom: 10 }}>
+              <div style={{ fontSize: 12, color: 'var(--text2)', lineHeight: 1.5 }}>
+                <span style={{ color: 'var(--green)', fontWeight: 600 }}>✓ </span>{entry.feedback.strength}
               </div>
-              <div style={{ fontSize: 12, color: 'var(--muted)', lineHeight: 1.6, marginTop: 4 }}>
-                <span style={{ color: 'var(--amber)' }}>⚠️ </span>{entry.feedback.improvement}
+              <div style={{ fontSize: 12, color: 'var(--text2)', lineHeight: 1.5 }}>
+                <span style={{ color: 'var(--amber)', fontWeight: 600 }}>⚠ </span>{entry.feedback.improvement}
               </div>
-            </>
+            </div>
           )}
 
-          {/* Always show the model answer so they can learn */}
           <div style={{ height: 1, background: 'var(--border)', margin: '10px 0' }} />
-          <div style={{ fontSize: 10, letterSpacing: '.08em', textTransform: 'uppercase', color: 'var(--dim)', marginBottom: 6 }}>
-            Correct Answer
-          </div>
-          <p style={{ fontSize: 12, color: 'var(--text)', lineHeight: 1.7, opacity: .85 }}>
-            {entry.question.answer}
-          </p>
+          <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--green)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 6 }}>✓ Correct Answer</div>
+          <p style={{ fontSize: 12, color: 'var(--text2)', lineHeight: 1.75 }}>{entry.question.answer}</p>
         </div>
       ))}
 
       <div style={{ display: 'flex', gap: 10, marginTop: 28 }}>
         <button onClick={onPracticeAgain} style={{
-          padding: '10px 22px', borderRadius: 8, border: 'none', fontFamily: 'Outfit, sans-serif',
-          fontSize: 13, fontWeight: 500, cursor: 'pointer',
-          background: 'linear-gradient(135deg,var(--accent),var(--accent2))', color: '#fff',
-        }}>
-          Practice Again
-        </button>
+          padding: '10px 22px', borderRadius: 8, border: 'none', fontFamily: 'Inter, sans-serif',
+          fontSize: 13, fontWeight: 600, cursor: 'pointer',
+          background: 'linear-gradient(135deg, var(--accent), var(--accent2))', color: '#fff',
+          boxShadow: '0 2px 10px rgba(108,142,245,0.3)',
+        }}>Practice Again</button>
         <button onClick={onHome} style={{
           padding: '10px 22px', borderRadius: 8, border: '1px solid var(--border)',
-          background: 'none', color: 'var(--muted)', fontFamily: 'Outfit, sans-serif',
-          fontSize: 13, cursor: 'pointer',
-        }}>
-          Back to Home
-        </button>
+          background: 'transparent', color: 'var(--text2)', fontFamily: 'Inter, sans-serif', fontSize: 13, cursor: 'pointer',
+        }}>Back to Home</button>
       </div>
     </div>
   );

@@ -32,22 +32,14 @@ export default function InterviewScreen({
   const timerVal = useRef(0);
 
   const q = questions[currentQ];
-  const total = config.length;
-  const progress = (currentQ / total) * 100;
+  const progress = (currentQ / config.length) * 100;
 
   useEffect(() => {
-    setAnswer('');
-    setShowHint(false);
-    setShowAnswer(false);
-    setSubmitted(false);
-    setTimer(0);
-    timerVal.current = 0;
+    setAnswer(''); setShowHint(false); setShowAnswer(false);
+    setSubmitted(false); setTimer(0); timerVal.current = 0;
     if (timerRef.current) clearInterval(timerRef.current);
     if (!loadingQuestion) {
-      timerRef.current = setInterval(() => {
-        timerVal.current += 1;
-        setTimer(t => t + 1);
-      }, 1000);
+      timerRef.current = setInterval(() => { timerVal.current += 1; setTimer(t => t + 1); }, 1000);
     }
     return () => { if (timerRef.current) clearInterval(timerRef.current); };
   }, [currentQ, loadingQuestion]);
@@ -62,216 +54,201 @@ export default function InterviewScreen({
     await onSubmitAnswer(answer.trim(), timerVal.current);
   };
 
-  const handleSkip = () => {
+  const handleShowAnswer = () => {
     if (timerRef.current) clearInterval(timerRef.current);
-    onSkip();
+    setShowAnswer(true);
   };
+
+  const scoreColor = (s: number) => s >= 80 ? 'var(--green)' : s >= 55 ? 'var(--amber)' : 'var(--red)';
+  const scoreBg   = (s: number) => s >= 80 ? 'var(--greenbg)' : s >= 55 ? 'var(--amberbg)' : 'var(--redbg)';
 
   const verdictColor: Record<string, string> = {
     Strong: 'var(--green)', Good: 'var(--accent)',
     'Needs Work': 'var(--amber)', Insufficient: 'var(--red)',
   };
 
-  const scoreColor = (s: number) => s >= 80 ? 'var(--green)' : s >= 55 ? 'var(--amber)' : 'var(--red)';
-  const scoreBg   = (s: number) => s >= 80 ? 'rgba(16,185,129,.12)' : s >= 55 ? 'rgba(245,158,11,.12)' : 'rgba(239,68,68,.12)';
-  const scoreBd   = (s: number) => s >= 80 ? 'rgba(16,185,129,.3)'  : s >= 55 ? 'rgba(245,158,11,.3)'  : 'rgba(239,68,68,.3)';
-
   return (
-    <div style={{ maxWidth: 720 }}>
+    <div style={{ maxWidth: 660 }}>
 
       {/* Top bar */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
-        <span style={{ fontSize: 12, color: 'var(--muted)' }}>{config.role.name}</span>
-        <span style={{ fontSize: 11, background: 'rgba(59,130,246,.12)', color: 'var(--accent)', padding: '2px 10px', borderRadius: 20 }}>
-          {config.difficulty}
-        </span>
-        <span style={{ marginLeft: 'auto', fontFamily: 'DM Mono, monospace', fontSize: 12, color: timerColor }}>
-          ⏱ {fmt(timer)}
-        </span>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
+        <span style={{ fontSize: 12, fontWeight: 500, color: 'var(--text2)' }}>{config.role.name}</span>
+        <span style={{ width: 3, height: 3, borderRadius: '50%', background: 'var(--dim)', display: 'inline-block' }} />
+        <span style={{ fontSize: 12, color: 'var(--muted)' }}>{config.difficulty}</span>
+        <div style={{ marginLeft: 'auto', fontFamily: 'JetBrains Mono, monospace', fontSize: 11, color: timerColor, display: 'flex', alignItems: 'center', gap: 4 }}>
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+            <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+          </svg>
+          {fmt(timer)}
+        </div>
       </div>
 
-      {/* Progress bar */}
+      {/* Progress */}
       <div style={{ height: 2, background: 'var(--border)', borderRadius: 2, marginBottom: 32, overflow: 'hidden' }}>
-        <div style={{ height: '100%', background: 'linear-gradient(90deg,var(--accent),var(--accent2))', width: `${progress}%`, transition: '.4s' }} />
+        <div style={{ height: '100%', width: `${progress}%`, background: 'linear-gradient(90deg, var(--accent), var(--accent2))', borderRadius: 2, transition: 'width .5s ease' }} />
       </div>
 
-      {/* Question number */}
-      <div style={{ fontSize: 11, color: 'var(--dim)', letterSpacing: '.1em', textTransform: 'uppercase', marginBottom: 12 }}>
-        Question {currentQ + 1} of {total}
-        {q && <span style={{ marginLeft: 10, color: 'var(--dim)' }}>· {q.topic} · {q.type}</span>}
+      {/* Q label */}
+      <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 10 }}>
+        <span>Question {currentQ + 1} / {config.length}</span>
+        {q && <>
+          <span style={{ width: 3, height: 3, borderRadius: '50%', background: 'var(--dim)', display: 'inline-block' }} />
+          <span style={{ color: 'var(--accent)', background: 'var(--accentbg)', padding: '2px 8px', borderRadius: 20, fontSize: 10 }}>{q.type}</span>
+          <span style={{ color: 'var(--dim)' }}>{q.topic}</span>
+        </>}
       </div>
 
-      {/* THE QUESTION — big and clear */}
+      {/* THE QUESTION */}
       <div style={{
-        fontSize: 22, fontWeight: 500, lineHeight: 1.5, color: 'var(--text)',
-        marginBottom: 28, minHeight: 60,
-        fontFamily: 'Outfit, sans-serif',
+        fontSize: 20, fontWeight: 600, color: 'var(--text)', lineHeight: 1.55,
+        marginBottom: 28, minHeight: 56,
       }}>
-        {loadingQuestion ? (
-          <span style={{ color: 'var(--dim)', fontSize: 16 }}>
-            <span className="dot" /><span className="dot" /><span className="dot" />
-          </span>
-        ) : q?.question}
+        {loadingQuestion
+          ? <span style={{ display: 'inline-flex', gap: 5, alignItems: 'center' }}><span className="dot"/><span className="dot"/><span className="dot"/></span>
+          : q?.question
+        }
       </div>
 
       {/* Hint */}
       {showHint && q && (
         <div style={{
-          fontSize: 13, color: 'var(--muted)', padding: '10px 14px', marginBottom: 20,
-          background: 'rgba(255,255,255,.03)', borderLeft: '2px solid var(--dim)',
-          borderRadius: '0 6px 6px 0', fontStyle: 'italic',
+          fontSize: 13, color: 'var(--text2)', padding: '10px 14px', marginBottom: 20,
+          background: 'var(--card)', border: '1px solid var(--border)',
+          borderLeft: '3px solid var(--amber)', borderRadius: '0 8px 8px 0',
         }}>
           💡 {q.hint}
         </div>
       )}
 
-      {/* Show Answer panel — key learning feature */}
+      {/* Show Answer box */}
       {showAnswer && q && (
-        <div style={{
-          background: 'rgba(16,185,129,.07)', border: '1px solid rgba(16,185,129,.25)',
-          borderRadius: 12, padding: 20, marginBottom: 24,
-        }} className="animate-fadeSlide">
-          <div style={{ fontSize: 10, letterSpacing: '.1em', textTransform: 'uppercase', color: 'var(--green)', marginBottom: 10 }}>
-            ✅ Answer / Explanation
+        <div className="animate-fadeSlide" style={{
+          background: 'var(--greenbg)', border: '1px solid var(--green)',
+          borderRadius: 10, padding: '16px 18px', marginBottom: 24,
+        }}>
+          <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--green)', textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 10 }}>
+            ✓ Answer
           </div>
-          <p style={{ fontSize: 14, lineHeight: 1.75, color: 'var(--text)' }}>{q.answer}</p>
+          <p style={{ fontSize: 14, color: 'var(--text)', lineHeight: 1.75 }}>{q.answer}</p>
         </div>
       )}
 
-      {/* Answer textarea — only if not submitted */}
+      {/* Answer input */}
       {!submitted && !showAnswer && (
         <>
           <textarea
             value={answer}
             onChange={e => setAnswer(e.target.value)}
-            placeholder="Type your answer… don't overthink it, just answer like you would in a real interview."
+            placeholder="Type your answer here…"
             style={{
-              width: '100%', background: 'rgba(255,255,255,.03)',
-              border: '1px solid var(--border)', borderRadius: 10,
-              color: 'var(--text)', fontFamily: 'Outfit, sans-serif', fontSize: 14,
-              lineHeight: 1.7, padding: '14px 16px', resize: 'vertical',
-              minHeight: 120, outline: 'none', marginBottom: 16,
-              transition: 'border-color .2s',
+              width: '100%', borderRadius: 10, padding: '13px 15px',
+              background: 'var(--card)', border: '1px solid var(--border)',
+              color: 'var(--text)', fontFamily: 'Inter, sans-serif', fontSize: 14,
+              lineHeight: 1.7, resize: 'vertical', minHeight: 120, outline: 'none',
+              marginBottom: 14, transition: 'border-color .2s',
             }}
             onFocus={e => { e.target.style.borderColor = 'var(--accent)'; }}
             onBlur={e => { e.target.style.borderColor = 'var(--border)'; }}
           />
-
-          {/* Action buttons */}
-          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
-            <GhostBtn onClick={handleSubmit} primary disabled={!answer.trim() || loadingQuestion}>
-              Submit Answer
-            </GhostBtn>
-            <GhostBtn onClick={() => setShowHint(h => !h)}>
-              {showHint ? 'Hide Hint' : '💡 Hint'}
-            </GhostBtn>
-            <GhostBtn onClick={() => { setShowAnswer(true); if (timerRef.current) clearInterval(timerRef.current); }}>
-              Show Answer
-            </GhostBtn>
-            <GhostBtn onClick={handleSkip}>Skip →</GhostBtn>
-            <GhostBtn danger onClick={onEnd}>End Session</GhostBtn>
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            <Btn primary disabled={!answer.trim() || loadingQuestion} onClick={handleSubmit}>Submit</Btn>
+            <Btn onClick={() => setShowHint(h => !h)}>{showHint ? 'Hide Hint' : '💡 Hint'}</Btn>
+            <Btn onClick={handleShowAnswer}>Show Answer</Btn>
+            <Btn onClick={onSkip}>Skip</Btn>
+            <Btn danger onClick={onEnd}>End</Btn>
           </div>
         </>
       )}
 
-      {/* If they clicked Show Answer, offer to move on */}
+      {/* After Show Answer — just nav */}
       {showAnswer && !submitted && (
-        <div style={{ display: 'flex', gap: 10, marginTop: 8 }}>
-          {isLastQuestion ? (
-            <GhostBtn primary onClick={onViewReport}>View Report →</GhostBtn>
-          ) : (
-            <GhostBtn primary onClick={onNextQuestion}>Next Question →</GhostBtn>
-          )}
-          <GhostBtn danger onClick={onEnd}>End Session</GhostBtn>
+        <div style={{ display: 'flex', gap: 8 }}>
+          {isLastQuestion
+            ? <Btn primary onClick={onViewReport}>View Report →</Btn>
+            : <Btn primary onClick={onNextQuestion}>Next Question →</Btn>
+          }
+          <Btn danger onClick={onEnd}>End Session</Btn>
         </div>
       )}
 
       {/* Feedback loading */}
       {loadingFeedback && (
-        <div style={{ marginTop: 28, color: 'var(--muted)', fontSize: 13, display: 'flex', gap: 8, alignItems: 'center' }}>
-          <span className="dot" /><span className="dot" /><span className="dot" />
-          <span style={{ marginLeft: 6 }}>Reviewing your answer…</span>
+        <div style={{ marginTop: 28, display: 'flex', alignItems: 'center', gap: 8, color: 'var(--muted)', fontSize: 13 }}>
+          <span className="dot"/><span className="dot"/><span className="dot"/>
+          <span style={{ marginLeft: 4 }}>Reviewing your answer…</span>
         </div>
       )}
 
-      {/* Feedback card */}
+      {/* Feedback */}
       {lastFeedback && !loadingFeedback && (
-        <div className="animate-fadeSlide" style={{ marginTop: 28 }}>
+        <div className="animate-fadeSlide" style={{ marginTop: 28, display: 'flex', flexDirection: 'column', gap: 12 }}>
 
-          {/* Score row */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 20 }}>
+          {/* Score */}
+          <div style={{
+            display: 'flex', alignItems: 'center', gap: 14, padding: '16px 18px',
+            background: scoreBg(lastFeedback.score), border: `1px solid ${scoreColor(lastFeedback.score)}`,
+            borderRadius: 10,
+          }}>
             <div style={{
-              width: 58, height: 58, borderRadius: '50%', flexShrink: 0,
+              width: 52, height: 52, borderRadius: '50%', flexShrink: 0,
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontFamily: 'DM Mono, monospace', fontSize: 20, fontWeight: 600,
-              background: scoreBg(lastFeedback.score),
-              border: `2px solid ${scoreBd(lastFeedback.score)}`,
+              fontFamily: 'JetBrains Mono, monospace', fontSize: 18, fontWeight: 700,
               color: scoreColor(lastFeedback.score),
+              border: `2px solid ${scoreColor(lastFeedback.score)}`,
             }}>
               {lastFeedback.score}
             </div>
             <div>
-              <div style={{ fontSize: 14, fontWeight: 600, color: verdictColor[lastFeedback.verdict] }}>
-                {lastFeedback.verdict}
-              </div>
-              <div style={{ fontSize: 12, color: 'var(--muted)' }}>Your performance on this question</div>
+              <div style={{ fontSize: 14, fontWeight: 700, color: verdictColor[lastFeedback.verdict] }}>{lastFeedback.verdict}</div>
+              <div style={{ fontSize: 12, color: 'var(--muted)', marginTop: 2 }}>out of 100 points</div>
             </div>
           </div>
 
-          <Divider />
-
-          {/* Strength / Improvement */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 16 }}>
-            <InfoBox color="var(--green)" bg="rgba(16,185,129,.07)" bd="rgba(16,185,129,.2)" label="What you got right">
-              {lastFeedback.strength}
-            </InfoBox>
-            <InfoBox color="var(--amber)" bg="rgba(245,158,11,.07)" bd="rgba(245,158,11,.2)" label="What was missing">
-              {lastFeedback.improvement}
-            </InfoBox>
+          {/* Strength + Improvement */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+            <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 8, padding: '12px 14px' }}>
+              <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--green)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 6 }}>What you got right</div>
+              <div style={{ fontSize: 12, color: 'var(--text)', lineHeight: 1.6 }}>{lastFeedback.strength}</div>
+            </div>
+            <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 8, padding: '12px 14px' }}>
+              <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--amber)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 6 }}>What was missing</div>
+              <div style={{ fontSize: 12, color: 'var(--text)', lineHeight: 1.6 }}>{lastFeedback.improvement}</div>
+            </div>
           </div>
 
-          {/* Key points they should have said */}
-          <div style={{ marginBottom: 14 }}>
-            <div style={{ fontSize: 10, letterSpacing: '.1em', textTransform: 'uppercase', color: 'var(--muted)', marginBottom: 8 }}>
-              Key points expected
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+          {/* Key points */}
+          <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 8, padding: '14px 16px' }}>
+            <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 10 }}>Key points expected</div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
               {lastFeedback.keyPoints.map((p, i) => (
-                <div key={i} style={{ fontSize: 13, color: 'var(--text)', display: 'flex', gap: 8, lineHeight: 1.5 }}>
-                  <span style={{ color: 'var(--accent)', flexShrink: 0 }}>→</span>
+                <div key={i} style={{ display: 'flex', gap: 8, fontSize: 13, color: 'var(--text)', lineHeight: 1.5 }}>
+                  <span style={{ color: 'var(--accent)', fontWeight: 700, flexShrink: 0 }}>→</span>
                   {p}
                 </div>
               ))}
             </div>
           </div>
 
-          <Divider />
-
-          {/* Show the model answer */}
+          {/* Model answer */}
           {q?.answer && (
-            <div style={{ marginBottom: 14 }}>
-              <div style={{ fontSize: 10, letterSpacing: '.1em', textTransform: 'uppercase', color: 'var(--muted)', marginBottom: 8 }}>
-                ✅ Full answer / what to remember
-              </div>
-              <p style={{ fontSize: 13, lineHeight: 1.75, color: 'var(--text)', background: 'rgba(16,185,129,.05)', border: '1px solid rgba(16,185,129,.15)', borderRadius: 8, padding: '12px 14px' }}>
-                {q.answer}
-              </p>
+            <div style={{ background: 'var(--greenbg)', border: '1px solid var(--green)', borderRadius: 8, padding: '14px 16px' }}>
+              <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--green)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 8 }}>✓ Full answer</div>
+              <p style={{ fontSize: 13, color: 'var(--text)', lineHeight: 1.75 }}>{q.answer}</p>
             </div>
           )}
 
           {/* Tip */}
           {lastFeedback.tip && (
-            <div style={{ fontSize: 13, color: 'var(--muted)', fontStyle: 'italic', padding: '10px 14px', background: 'rgba(255,255,255,.03)', borderLeft: '2px solid var(--dim)', borderRadius: '0 6px 6px 0' }}>
+            <div style={{ fontSize: 12, color: 'var(--text2)', padding: '10px 14px', borderLeft: '3px solid var(--accent)', background: 'var(--card)', borderRadius: '0 8px 8px 0' }}>
               📌 {lastFeedback.tip}
             </div>
           )}
 
-          <div style={{ marginTop: 20 }}>
-            {isLastQuestion ? (
-              <GhostBtn primary onClick={onViewReport}>📊 View Full Report</GhostBtn>
-            ) : (
-              <GhostBtn primary onClick={onNextQuestion}>Next Question →</GhostBtn>
-            )}
+          <div style={{ paddingTop: 4 }}>
+            {isLastQuestion
+              ? <Btn primary onClick={onViewReport}>📊 View Report</Btn>
+              : <Btn primary onClick={onNextQuestion}>Next Question →</Btn>
+            }
           </div>
         </div>
       )}
@@ -279,22 +256,7 @@ export default function InterviewScreen({
   );
 }
 
-function Divider() {
-  return <div style={{ height: 1, background: 'var(--border)', margin: '14px 0' }} />;
-}
-
-function InfoBox({ label, color, bg, bd, children }: {
-  label: string; color: string; bg: string; bd: string; children: React.ReactNode;
-}) {
-  return (
-    <div style={{ background: bg, border: `1px solid ${bd}`, borderRadius: 8, padding: '10px 12px' }}>
-      <div style={{ fontSize: 10, letterSpacing: '.08em', textTransform: 'uppercase', color, marginBottom: 5 }}>{label}</div>
-      <div style={{ fontSize: 12, color: 'var(--text)', lineHeight: 1.5 }}>{children}</div>
-    </div>
-  );
-}
-
-function GhostBtn({ children, primary, danger, disabled, onClick }: {
+function Btn({ children, primary, danger, disabled, onClick }: {
   children: React.ReactNode; primary?: boolean; danger?: boolean; disabled?: boolean; onClick?: () => void;
 }) {
   return (
@@ -302,13 +264,16 @@ function GhostBtn({ children, primary, danger, disabled, onClick }: {
       onClick={onClick}
       disabled={disabled}
       style={{
-        padding: '9px 20px', borderRadius: 8, fontFamily: 'Outfit, sans-serif',
+        padding: '9px 18px', borderRadius: 8, fontFamily: 'Inter, sans-serif',
         fontSize: 13, fontWeight: 500, cursor: disabled ? 'not-allowed' : 'pointer',
-        transition: '.15s', display: 'inline-flex', alignItems: 'center', gap: 6,
-        opacity: disabled ? 0.4 : 1,
-        background: primary ? 'linear-gradient(135deg,var(--accent),var(--accent2))' : danger ? 'rgba(239,68,68,.1)' : 'rgba(255,255,255,.05)',
-        color: primary ? '#fff' : danger ? 'var(--red)' : 'var(--muted)',
-        border: primary ? 'none' : danger ? '1px solid rgba(239,68,68,.3)' : '1px solid var(--border)',
+        opacity: disabled ? 0.4 : 1, transition: '.15s', border: 'none',
+        display: 'inline-flex', alignItems: 'center', gap: 6,
+        background: primary
+          ? 'linear-gradient(135deg, var(--accent), var(--accent2))'
+          : danger ? 'var(--redbg)' : 'var(--card)',
+        color: primary ? '#fff' : danger ? 'var(--red)' : 'var(--text2)',
+        boxShadow: primary ? '0 2px 10px rgba(108,142,245,0.3)' : 'none',
+        outline: danger ? '1px solid var(--red)' : primary ? 'none' : '1px solid var(--border)',
       }}
     >
       {children}
