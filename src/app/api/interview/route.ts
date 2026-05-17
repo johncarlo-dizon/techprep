@@ -35,7 +35,7 @@ export async function POST(req: NextRequest) {
         : role.topics.join(', ');
 
       const prevList = previousQuestions?.length > 0
-        ? `\nDo NOT repeat these already-asked questions:\n${previousQuestions.map((q: string, i: number) => `${i + 1}. ${q}`).join('\n')}`
+        ? `\nALREADY ASKED — do NOT repeat or rephrase these, and avoid the same concept entirely:\n${previousQuestions.map((q: string, i: number) => `${i + 1}. ${q}`).join('\n')}\n\nYou MUST pick a completely different concept for question ${questionNumber}.`
         : '';
 
       const levelGuide =
@@ -68,7 +68,7 @@ Respond ONLY with valid JSON, no markdown, no extra text:
         model: 'llama-3.3-70b-versatile',
         messages: [{ role: 'user', content: prompt }],
         max_tokens: 700,
-        temperature: 0.85,
+        temperature: 0.7,
       });
 
       const raw = completion.choices[0]?.message?.content ?? '';

@@ -53,7 +53,9 @@ export default function Page() {
             topics: config.topics,
             questionNumber: qNum,
             totalQuestions: config.length,
-            previousQuestions: prev.map(q => q.question),
+            // Pass topic label + question text so the model avoids
+            // repeating the same concept, not just the same wording.
+            previousQuestions: prev.map(q => `[${q.topic}] ${q.question}`),
           },
         }),
       });
