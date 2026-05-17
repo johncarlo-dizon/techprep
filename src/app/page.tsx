@@ -129,7 +129,8 @@ export default function Page() {
         }}
         stats={sideStats}
       />
-      <main style={{ flex: 1, padding: '36px 44px', maxWidth: 860 }}>
+      {/* className handles padding + mobile bottom-nav offset via globals.css */}
+      <main className="main-content">
         {screen === 'home' && (
           <HomeScreen config={config} onConfigChange={setConfig} onStart={startInterview} />
         )}
@@ -160,4 +161,4 @@ export default function Page() {
       </main>
     </div>
   );
-} 
+}

@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { Question, Feedback, SessionConfig } from '@/types';
+import { useIsMobile } from '@/hooks/useIsMobile';
 
 interface InterviewScreenProps {
   config: SessionConfig;
@@ -30,6 +31,7 @@ export default function InterviewScreen({
   const [timer, setTimer] = useState(0);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const timerVal = useRef(0);
+  const isMobile = useIsMobile();
 
   const q = questions[currentQ];
   const progress = (currentQ / config.length) * 100;
@@ -71,7 +73,7 @@ export default function InterviewScreen({
     <div style={{ maxWidth: 660 }}>
 
       {/* Top bar */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8, flexWrap: 'wrap' }}>
         <span style={{ fontSize: 12, fontWeight: 500, color: 'var(--text2)' }}>{config.role.name}</span>
         <span style={{ width: 3, height: 3, borderRadius: '50%', background: 'var(--dim)', display: 'inline-block' }} />
         <span style={{ fontSize: 12, color: 'var(--muted)' }}>{config.difficulty}</span>
@@ -89,7 +91,7 @@ export default function InterviewScreen({
       </div>
 
       {/* Q label */}
-      <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 10 }}>
+      <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
         <span>Question {currentQ + 1} / {config.length}</span>
         {q && <>
           <span style={{ width: 3, height: 3, borderRadius: '50%', background: 'var(--dim)', display: 'inline-block' }} />
@@ -100,7 +102,7 @@ export default function InterviewScreen({
 
       {/* THE QUESTION */}
       <div style={{
-        fontSize: 20, fontWeight: 600, color: 'var(--text)', lineHeight: 1.55,
+        fontSize: isMobile ? 17 : 20, fontWeight: 600, color: 'var(--text)', lineHeight: 1.55,
         marginBottom: 28, minHeight: 56,
       }}>
         {loadingQuestion
@@ -144,30 +146,46 @@ export default function InterviewScreen({
               width: '100%', borderRadius: 10, padding: '13px 15px',
               background: 'var(--card)', border: '1px solid var(--border)',
               color: 'var(--text)', fontFamily: 'Inter, sans-serif', fontSize: 14,
-              lineHeight: 1.7, resize: 'vertical', minHeight: 120, outline: 'none',
+              lineHeight: 1.7, resize: 'vertical', minHeight: isMobile ? 100 : 120, outline: 'none',
               marginBottom: 14, transition: 'border-color .2s',
             }}
             onFocus={e => { e.target.style.borderColor = 'var(--accent)'; }}
             onBlur={e => { e.target.style.borderColor = 'var(--border)'; }}
           />
-          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-            <Btn primary disabled={!answer.trim() || loadingQuestion} onClick={handleSubmit}>Submit</Btn>
-            <Btn onClick={() => setShowHint(h => !h)}>{showHint ? 'Hide Hint' : '💡 Hint'}</Btn>
-            <Btn onClick={handleShowAnswer}>Show Answer</Btn>
-            <Btn onClick={onSkip}>Skip</Btn>
-            <Btn danger onClick={onEnd}>End</Btn>
-          </div>
+
+          {/* Mobile: stacked button layout */}
+          {isMobile ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <Btn primary disabled={!answer.trim() || loadingQuestion} onClick={handleSubmit} fullWidth>Submit Answer</Btn>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <Btn onClick={() => setShowHint(h => !h)} fullWidth>{showHint ? 'Hide Hint' : '💡 Hint'}</Btn>
+                <Btn onClick={handleShowAnswer} fullWidth>Show Answer</Btn>
+              </div>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <Btn onClick={onSkip} fullWidth>Skip</Btn>
+                <Btn danger onClick={onEnd} fullWidth>End</Btn>
+              </div>
+            </div>
+          ) : (
+            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+              <Btn primary disabled={!answer.trim() || loadingQuestion} onClick={handleSubmit}>Submit</Btn>
+              <Btn onClick={() => setShowHint(h => !h)}>{showHint ? 'Hide Hint' : '💡 Hint'}</Btn>
+              <Btn onClick={handleShowAnswer}>Show Answer</Btn>
+              <Btn onClick={onSkip}>Skip</Btn>
+              <Btn danger onClick={onEnd}>End</Btn>
+            </div>
+          )}
         </>
       )}
 
       {/* After Show Answer — just nav */}
       {showAnswer && !submitted && (
-        <div style={{ display: 'flex', gap: 8 }}>
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
           {isLastQuestion
-            ? <Btn primary onClick={onViewReport}>View Report →</Btn>
-            : <Btn primary onClick={onNextQuestion}>Next Question →</Btn>
+            ? <Btn primary onClick={onViewReport} fullWidth={isMobile}>View Report →</Btn>
+            : <Btn primary onClick={onNextQuestion} fullWidth={isMobile}>Next Question →</Btn>
           }
-          <Btn danger onClick={onEnd}>End Session</Btn>
+          <Btn danger onClick={onEnd} fullWidth={isMobile}>End Session</Btn>
         </div>
       )}
 
@@ -204,8 +222,8 @@ export default function InterviewScreen({
             </div>
           </div>
 
-          {/* Strength + Improvement */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+          {/* Strength + Improvement — CSS class handles 2→1 col on mobile */}
+          <div className="feedback-grid">
             <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 8, padding: '12px 14px' }}>
               <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--green)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 6 }}>What you got right</div>
               <div style={{ fontSize: 12, color: 'var(--text)', lineHeight: 1.6 }}>{lastFeedback.strength}</div>
@@ -246,8 +264,8 @@ export default function InterviewScreen({
 
           <div style={{ paddingTop: 4 }}>
             {isLastQuestion
-              ? <Btn primary onClick={onViewReport}>📊 View Report</Btn>
-              : <Btn primary onClick={onNextQuestion}>Next Question →</Btn>
+              ? <Btn primary onClick={onViewReport} fullWidth={isMobile}>📊 View Report</Btn>
+              : <Btn primary onClick={onNextQuestion} fullWidth={isMobile}>Next Question →</Btn>
             }
           </div>
         </div>
@@ -256,8 +274,9 @@ export default function InterviewScreen({
   );
 }
 
-function Btn({ children, primary, danger, disabled, onClick }: {
-  children: React.ReactNode; primary?: boolean; danger?: boolean; disabled?: boolean; onClick?: () => void;
+function Btn({ children, primary, danger, disabled, onClick, fullWidth }: {
+  children: React.ReactNode; primary?: boolean; danger?: boolean;
+  disabled?: boolean; onClick?: () => void; fullWidth?: boolean;
 }) {
   return (
     <button
@@ -267,7 +286,8 @@ function Btn({ children, primary, danger, disabled, onClick }: {
         padding: '9px 18px', borderRadius: 8, fontFamily: 'Inter, sans-serif',
         fontSize: 13, fontWeight: 500, cursor: disabled ? 'not-allowed' : 'pointer',
         opacity: disabled ? 0.4 : 1, transition: '.15s', border: 'none',
-        display: 'inline-flex', alignItems: 'center', gap: 6,
+        display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+        width: fullWidth ? '100%' : 'auto',
         background: primary
           ? 'linear-gradient(135deg, var(--accent), var(--accent2))'
           : danger ? 'var(--redbg)' : 'var(--card)',

@@ -2,6 +2,7 @@
 
 import { ROLES, DIFFICULTIES, TOPICS, SESSION_LENGTHS, CORE_TOPIC_GROUPS } from '@/lib/constants';
 import { Role, SessionConfig } from '@/types';
+import { useIsMobile } from '@/hooks/useIsMobile';
 
 interface HomeScreenProps {
   config: SessionConfig;
@@ -10,6 +11,7 @@ interface HomeScreenProps {
 }
 
 export default function HomeScreen({ config, onConfigChange, onStart }: HomeScreenProps) {
+  const isMobile = useIsMobile();
   const set = (partial: Partial<SessionConfig>) => onConfigChange({ ...config, ...partial });
 
   const toggleTopic = (id: string) => {
@@ -28,11 +30,11 @@ export default function HomeScreen({ config, onConfigChange, onStart }: HomeScre
     <div style={{ maxWidth: 680 }}>
 
       {/* Header */}
-      <div style={{ marginBottom: 40 }}>
+      <div style={{ marginBottom: isMobile ? 28 : 40 }}>
         <div style={{ fontSize: 12, fontWeight: 500, color: 'var(--accent)', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: 10 }}>
           IT Interview Practice
         </div>
-        <h1 style={{ fontSize: 32, fontWeight: 700, color: 'var(--text)', lineHeight: 1.2, marginBottom: 8 }}>
+        <h1 style={{ fontSize: isMobile ? 24 : 32, fontWeight: 700, color: 'var(--text)', lineHeight: 1.2, marginBottom: 8 }}>
           Ready to practice?
         </h1>
         <p style={{ fontSize: 14, color: 'var(--muted)', lineHeight: 1.6 }}>
@@ -42,7 +44,8 @@ export default function HomeScreen({ config, onConfigChange, onStart }: HomeScre
 
       {/* Role */}
       <Section label="Your Role">
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
+        {/* CSS class handles 3→2 col responsive breakpoint */}
+        <div className="role-grid">
           {ROLES.map(r => (
             <RoleCard key={r.id} role={r} selected={config.role.id === r.id} onClick={() => set({ role: r })} />
           ))}
@@ -78,7 +81,8 @@ export default function HomeScreen({ config, onConfigChange, onStart }: HomeScre
             </button>
           ))}
         </div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: 6 }}>
+        {/* CSS class handles responsive columns */}
+        <div className="topic-grid">
           {TOPICS.map(t => {
             const on = config.topics.includes(t.id);
             return (
@@ -112,7 +116,7 @@ export default function HomeScreen({ config, onConfigChange, onStart }: HomeScre
 
       {/* Length */}
       <Section label="Session Length">
-        <div style={{ display: 'flex', gap: 8 }}>
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
           {SESSION_LENGTHS.map(l => (
             <Chip key={l.value} active={config.length === l.value} onClick={() => set({ length: l.value })}>{l.label}</Chip>
           ))}
@@ -123,11 +127,14 @@ export default function HomeScreen({ config, onConfigChange, onStart }: HomeScre
       <button
         onClick={onStart}
         style={{
-          marginTop: 8, padding: '12px 28px', borderRadius: 10, border: 'none',
+          marginTop: 8,
+          padding: isMobile ? '13px 0' : '12px 28px',
+          width: isMobile ? '100%' : 'auto',
+          borderRadius: 10, border: 'none',
           background: 'linear-gradient(135deg, var(--accent), var(--accent2))',
           color: '#fff', fontSize: 14, fontWeight: 600, cursor: 'pointer',
           fontFamily: 'Inter, sans-serif', letterSpacing: '.01em',
-          display: 'inline-flex', alignItems: 'center', gap: 8,
+          display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8,
           boxShadow: '0 2px 12px rgba(108,142,245,0.35)',
           transition: 'opacity .15s, transform .15s',
         }}
@@ -146,7 +153,7 @@ export default function HomeScreen({ config, onConfigChange, onStart }: HomeScre
 function Section({ label, hint, children }: { label: string; hint?: string; children: React.ReactNode }) {
   return (
     <div style={{ marginBottom: 28 }}>
-      <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginBottom: 12 }}>
+      <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginBottom: 12, flexWrap: 'wrap' }}>
         <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text)', textTransform: 'uppercase', letterSpacing: '.06em' }}>{label}</div>
         {hint && <div style={{ fontSize: 11, color: 'var(--muted)' }}>{hint}</div>}
       </div>

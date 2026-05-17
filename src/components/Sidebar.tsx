@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useIsMobile } from '@/hooks/useIsMobile';
 
 type Screen = 'home' | 'interview' | 'report';
 
@@ -12,6 +13,7 @@ interface SidebarProps {
 
 export default function Sidebar({ screen, onNavigate, stats }: SidebarProps) {
   const [theme, setTheme] = useState<'dark' | 'light'>('dark');
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     const saved = localStorage.getItem('theme') as 'dark' | 'light' | null;
@@ -31,6 +33,65 @@ export default function Sidebar({ screen, onNavigate, stats }: SidebarProps) {
     { label: 'Results',   screen: 'report'    as Screen, icon: ChartIcon },
   ];
 
+  /* ── Mobile: fixed bottom tab bar ── */
+  if (isMobile) {
+    return (
+      <nav style={{
+        position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 100,
+        background: 'var(--surface)',
+        borderTop: '1px solid var(--border)',
+        display: 'flex', alignItems: 'stretch',
+        height: 60,
+        paddingBottom: 'env(safe-area-inset-bottom)',
+      }}>
+        {navItems.map(item => {
+          const active = screen === item.screen;
+          return (
+            <button
+              key={item.screen}
+              onClick={() => onNavigate(item.screen)}
+              style={{
+                flex: 1, display: 'flex', flexDirection: 'column',
+                alignItems: 'center', justifyContent: 'center', gap: 3,
+                border: 'none', background: 'transparent',
+                color: active ? 'var(--accent)' : 'var(--muted)',
+                cursor: 'pointer', fontFamily: 'Inter, sans-serif',
+                transition: 'color .15s', padding: '6px 0',
+                position: 'relative',
+              }}
+            >
+              {active && (
+                <div style={{
+                  position: 'absolute', top: 0, left: '20%', right: '20%',
+                  height: 2, background: 'linear-gradient(90deg, var(--accent), var(--accent2))',
+                  borderRadius: '0 0 2px 2px',
+                }} />
+              )}
+              <item.icon active={active} />
+              <span style={{ fontSize: 10, fontWeight: active ? 600 : 400 }}>{item.label}</span>
+            </button>
+          );
+        })}
+        {/* Theme toggle as last tab */}
+        <button
+          onClick={toggleTheme}
+          title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+          style={{
+            flex: 1, display: 'flex', flexDirection: 'column',
+            alignItems: 'center', justifyContent: 'center', gap: 3,
+            border: 'none', background: 'transparent',
+            cursor: 'pointer', color: 'var(--muted)',
+            padding: '6px 0',
+          }}
+        >
+          <span style={{ fontSize: 16 }}>{theme === 'dark' ? '☀️' : '🌙'}</span>
+          <span style={{ fontSize: 10, fontFamily: 'Inter, sans-serif', color: 'var(--muted)' }}>Theme</span>
+        </button>
+      </nav>
+    );
+  }
+
+  /* ── Desktop: sidebar ── */
   return (
     <aside style={{
       width: 240, flexShrink: 0,
