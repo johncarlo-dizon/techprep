@@ -9,15 +9,13 @@ export interface Question {
   question: string;
   topic: string;
   type: 'Technical' | 'Behavioral' | 'Conceptual' | 'Scenario';
-  answer: string;   // the correct explanation — shown via "Show Answer"
+  answer: string;
   hint: string;
 }
 
 export interface Feedback {
-  score: number;
-  verdict: 'Strong' | 'Good' | 'Needs Work' | 'Insufficient';
-  strength: string;
-  improvement: string;
+  verdict: 'Correct' | 'Partially Correct' | 'Incorrect';
+  explanation: string;
   keyPoints: string[];
   tip: string;
 }

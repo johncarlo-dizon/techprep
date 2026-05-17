@@ -86,10 +86,15 @@ Question: ${question}
 Their answer: ${answer}
 Time taken: ${timeSeconds} seconds
 
-Be direct and honest. If the answer is vague, incomplete, or wrong — say so clearly. If it is good — say why.
+Evaluate honestly. If the answer is vague, incomplete, or wrong — say so clearly. If it is good — say why.
+
+verdict rules:
+- "Correct" — covers the key concept accurately, even if not exhaustive
+- "Partially Correct" — gets some of it right but misses important parts or has inaccuracies
+- "Incorrect" — wrong, too vague to be useful, or clearly misunderstood
 
 Respond ONLY with valid JSON, no markdown, no extra text:
-{"score":<integer 0-100>,"verdict":"Strong|Good|Needs Work|Insufficient","strength":"<one sentence — what they got right>","improvement":"<one sentence — what was missing or wrong>","keyPoints":["<key thing 1 they should have said>","<key thing 2>","<key thing 3>"],"tip":"<one practical tip to improve — e.g. read about X, practice Y>"}`;
+{"verdict":"Correct|Partially Correct|Incorrect","explanation":"<2-3 sentences: what they got right and/or what was wrong or missing — be direct>","keyPoints":["<key thing they should have said 1>","<key thing 2>","<key thing 3>"],"tip":"<one practical tip to improve — e.g. read about X, practice Y>"}`;
 
       const completion = await groq.chat.completions.create({
         model: 'llama-3.3-70b-versatile',

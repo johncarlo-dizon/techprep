@@ -8,7 +8,7 @@ type Screen = 'home' | 'interview' | 'report';
 interface SidebarProps {
   screen: Screen;
   onNavigate: (s: Screen) => void;
-  stats: { questions: number; avgScore: number | null; bestTopic: string | null };
+  stats: { questions: number; correct: number; bestTopic: string | null };
 }
 
 export default function Sidebar({ screen, onNavigate, stats }: SidebarProps) {
@@ -158,7 +158,7 @@ export default function Sidebar({ screen, onNavigate, stats }: SidebarProps) {
         </div>
         {[
           { label: 'Questions', value: String(stats.questions), color: 'var(--text)' },
-          { label: 'Avg Score',  value: stats.avgScore != null ? `${stats.avgScore}%` : '—', color: 'var(--green)' },
+          { label: 'Correct',   value: stats.questions > 0 ? `${stats.correct}/${stats.questions}` : '—', color: 'var(--green)' },
           { label: 'Best Topic', value: stats.bestTopic ?? '—', color: 'var(--amber)' },
         ].map((s, i) => (
           <div key={i} style={{

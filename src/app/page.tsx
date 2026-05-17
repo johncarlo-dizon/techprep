@@ -27,14 +27,14 @@ export default function Page() {
   const [loadingFeedback, setLoadingFeedback] = useState(false);
   const [lastFeedback, setLastFeedback] = useState<Feedback | null>(null);
 
-  const scored = entries.filter(e => e.feedback);
+  const answered = entries.filter(e => e.feedback);
+  const correct  = answered.filter(e => e.feedback?.verdict === 'Correct').length;
   const sideStats = {
     questions: entries.length,
-    avgScore: scored.length
-      ? Math.round(scored.reduce((a, e) => a + e.feedback!.score, 0) / scored.length)
-      : null,
-    bestTopic: scored.length
-      ? scored.reduce((best, e) => e.feedback!.score > (best.feedback?.score ?? 0) ? e : best, scored[0])?.question.topic ?? null
+    correct,
+    bestTopic: answered.length
+      ? answered.filter(e => e.feedback?.verdict === 'Correct')
+          .at(-1)?.question.topic ?? null
       : null,
   };
 
@@ -52,9 +52,7 @@ export default function Page() {
             difficulty: config.difficulty,
             topics: config.topics,
             questionNumber: qNum,
-            totalQuestions: config.length,
-            // Pass topic label + question text so the model avoids
-            // repeating the same concept, not just the same wording.
+            totalQuestions: config.length === -1 ? '∞' : config.length,
             previousQuestions: prev.map(q => `[${q.topic}] ${q.question}`),
           },
         }),
@@ -112,7 +110,8 @@ export default function Page() {
     const q = questions[currentQ];
     if (q) setEntries(prev => [...prev, { question: q, answer: '[Skipped]', feedback: null, timeSeconds: 0 }]);
     const next = currentQ + 1;
-    if (next >= config.length) { setScreen('report'); return; }
+    // For unlimited, never auto-end on skip
+    if (config.length !== -1 && next >= config.length) { setScreen('report'); return; }
     setCurrentQ(next);
     await fetchQuestion(next + 1, questions);
   }, [currentQ, questions, config.length, fetchQuestion]);
@@ -131,7 +130,6 @@ export default function Page() {
         }}
         stats={sideStats}
       />
-      {/* className handles padding + mobile bottom-nav offset via globals.css */}
       <main className="main-content">
         {screen === 'home' && (
           <HomeScreen config={config} onConfigChange={setConfig} onStart={startInterview} />
@@ -148,7 +146,7 @@ export default function Page() {
             onEnd={() => entries.length > 0 ? setScreen('report') : setScreen('home')}
             lastFeedback={lastFeedback}
             loadingFeedback={loadingFeedback}
-            isLastQuestion={currentQ + 1 >= config.length}
+            isLastQuestion={config.length !== -1 && currentQ + 1 >= config.length}
             onViewReport={() => setScreen('report')}
           />
         )}

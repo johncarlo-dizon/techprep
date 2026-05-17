@@ -19,6 +19,12 @@ interface InterviewScreenProps {
   onViewReport: () => void;
 }
 
+const VERDICT_META = {
+  'Correct':          { icon: '✓', color: 'var(--green)',  bg: 'var(--greenbg)',  label: 'Correct' },
+  'Partially Correct':{ icon: '⚠', color: 'var(--amber)',  bg: 'var(--amberbg)',  label: 'Partially Correct' },
+  'Incorrect':        { icon: '✗', color: 'var(--red)',    bg: 'var(--redbg)',    label: 'Incorrect' },
+} as const;
+
 export default function InterviewScreen({
   config, questions, currentQ, loadingQuestion,
   onSubmitAnswer, onNextQuestion, onSkip, onEnd,
@@ -34,7 +40,8 @@ export default function InterviewScreen({
   const isMobile = useIsMobile();
 
   const q = questions[currentQ];
-  const progress = (currentQ / config.length) * 100;
+  const isUnlimited = config.length === -1;
+  const progress = isUnlimited ? 0 : (currentQ / config.length) * 100;
 
   useEffect(() => {
     setAnswer(''); setShowHint(false); setShowAnswer(false);
@@ -61,14 +68,6 @@ export default function InterviewScreen({
     setShowAnswer(true);
   };
 
-  const scoreColor = (s: number) => s >= 80 ? 'var(--green)' : s >= 55 ? 'var(--amber)' : 'var(--red)';
-  const scoreBg   = (s: number) => s >= 80 ? 'var(--greenbg)' : s >= 55 ? 'var(--amberbg)' : 'var(--redbg)';
-
-  const verdictColor: Record<string, string> = {
-    Strong: 'var(--green)', Good: 'var(--accent)',
-    'Needs Work': 'var(--amber)', Insufficient: 'var(--red)',
-  };
-
   return (
     <div style={{ maxWidth: 660 }}>
 
@@ -85,14 +84,17 @@ export default function InterviewScreen({
         </div>
       </div>
 
-      {/* Progress */}
-      <div style={{ height: 2, background: 'var(--border)', borderRadius: 2, marginBottom: 32, overflow: 'hidden' }}>
-        <div style={{ height: '100%', width: `${progress}%`, background: 'linear-gradient(90deg, var(--accent), var(--accent2))', borderRadius: 2, transition: 'width .5s ease' }} />
-      </div>
+      {/* Progress bar — hidden for unlimited */}
+      {!isUnlimited && (
+        <div style={{ height: 2, background: 'var(--border)', borderRadius: 2, marginBottom: 32, overflow: 'hidden' }}>
+          <div style={{ height: '100%', width: `${progress}%`, background: 'linear-gradient(90deg, var(--accent), var(--accent2))', borderRadius: 2, transition: 'width .5s ease' }} />
+        </div>
+      )}
+      {isUnlimited && <div style={{ height: 2, marginBottom: 32 }} />}
 
       {/* Q label */}
       <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-        <span>Question {currentQ + 1} / {config.length}</span>
+        <span>Question {currentQ + 1}{isUnlimited ? '' : ` / ${config.length}`}</span>
         {q && <>
           <span style={{ width: 3, height: 3, borderRadius: '50%', background: 'var(--dim)', display: 'inline-block' }} />
           <span style={{ color: 'var(--accent)', background: 'var(--accentbg)', padding: '2px 8px', borderRadius: 20, fontSize: 10 }}>{q.type}</span>
@@ -153,7 +155,6 @@ export default function InterviewScreen({
             onBlur={e => { e.target.style.borderColor = 'var(--border)'; }}
           />
 
-          {/* Mobile: stacked button layout */}
           {isMobile ? (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               <Btn primary disabled={!answer.trim() || loadingQuestion} onClick={handleSubmit} fullWidth>Submit Answer</Btn>
@@ -181,7 +182,7 @@ export default function InterviewScreen({
       {/* After Show Answer — just nav */}
       {showAnswer && !submitted && (
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-          {isLastQuestion
+          {isLastQuestion && !isUnlimited
             ? <Btn primary onClick={onViewReport} fullWidth={isMobile}>View Report →</Btn>
             : <Btn primary onClick={onNextQuestion} fullWidth={isMobile}>Next Question →</Btn>
           }
@@ -201,38 +202,32 @@ export default function InterviewScreen({
       {lastFeedback && !loadingFeedback && (
         <div className="animate-fadeSlide" style={{ marginTop: 28, display: 'flex', flexDirection: 'column', gap: 12 }}>
 
-          {/* Score */}
-          <div style={{
-            display: 'flex', alignItems: 'center', gap: 14, padding: '16px 18px',
-            background: scoreBg(lastFeedback.score), border: `1px solid ${scoreColor(lastFeedback.score)}`,
-            borderRadius: 10,
-          }}>
-            <div style={{
-              width: 52, height: 52, borderRadius: '50%', flexShrink: 0,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontFamily: 'JetBrains Mono, monospace', fontSize: 18, fontWeight: 700,
-              color: scoreColor(lastFeedback.score),
-              border: `2px solid ${scoreColor(lastFeedback.score)}`,
-            }}>
-              {lastFeedback.score}
-            </div>
-            <div>
-              <div style={{ fontSize: 14, fontWeight: 700, color: verdictColor[lastFeedback.verdict] }}>{lastFeedback.verdict}</div>
-              <div style={{ fontSize: 12, color: 'var(--muted)', marginTop: 2 }}>out of 100 points</div>
-            </div>
-          </div>
-
-          {/* Strength + Improvement — CSS class handles 2→1 col on mobile */}
-          <div className="feedback-grid">
-            <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 8, padding: '12px 14px' }}>
-              <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--green)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 6 }}>What you got right</div>
-              <div style={{ fontSize: 12, color: 'var(--text)', lineHeight: 1.6 }}>{lastFeedback.strength}</div>
-            </div>
-            <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 8, padding: '12px 14px' }}>
-              <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--amber)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 6 }}>What was missing</div>
-              <div style={{ fontSize: 12, color: 'var(--text)', lineHeight: 1.6 }}>{lastFeedback.improvement}</div>
-            </div>
-          </div>
+          {/* Verdict banner */}
+          {(() => {
+            const meta = VERDICT_META[lastFeedback.verdict];
+            return (
+              <div style={{
+                display: 'flex', alignItems: 'center', gap: 14, padding: '14px 18px',
+                background: meta.bg, border: `1px solid ${meta.color}`,
+                borderRadius: 10,
+              }}>
+                <div style={{
+                  width: 40, height: 40, borderRadius: '50%', flexShrink: 0,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontSize: 20, fontWeight: 700, color: meta.color,
+                  border: `2px solid ${meta.color}`,
+                }}>
+                  {meta.icon}
+                </div>
+                <div>
+                  <div style={{ fontSize: 15, fontWeight: 700, color: meta.color }}>{meta.label}</div>
+                  <div style={{ fontSize: 13, color: 'var(--text2)', marginTop: 4, lineHeight: 1.55 }}>
+                    {lastFeedback.explanation}
+                  </div>
+                </div>
+              </div>
+            );
+          })()}
 
           {/* Key points */}
           <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 8, padding: '14px 16px' }}>
@@ -263,7 +258,7 @@ export default function InterviewScreen({
           )}
 
           <div style={{ paddingTop: 4 }}>
-            {isLastQuestion
+            {isLastQuestion && !isUnlimited
               ? <Btn primary onClick={onViewReport} fullWidth={isMobile}>📊 View Report</Btn>
               : <Btn primary onClick={onNextQuestion} fullWidth={isMobile}>Next Question →</Btn>
             }

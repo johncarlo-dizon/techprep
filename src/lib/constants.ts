@@ -116,13 +116,14 @@ export const TOPICS = [
   },
 ];
 
+// -1 = unlimited (end session manually)
 export const SESSION_LENGTHS = [
-  { value: 3, label: 'Quick (3 Qs)' },
-  { value: 5, label: 'Standard (5 Qs)' },
-  { value: 8, label: 'Extended (8 Qs)' },
+  { value: 5,  label: 'Quick (5 Qs)' },
+  { value: 10, label: 'Standard (10 Qs)' },
+  { value: 20, label: 'Deep Dive (20 Qs)' },
+  { value: -1, label: 'Unlimited ∞' },
 ];
 
-// The 4 core topic groups for display on home screen
 export const CORE_TOPIC_GROUPS = [
   {
     id: 'dev',
